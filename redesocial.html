@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RedeSocial - Conecte-se</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .navbar-custom {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+        .sidebar {
+            position: sticky;
+            top: 70px;
+        }
+        .post-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+        .post-card:hover {
+            transform: translateY(-2px);
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .avatar-lg {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .cover-photo {
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px 12px 0 0;
+        }
+        .reaction-btn {
+            background: none;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            color: #65676b;
+            font-weight: 500;
+        }
+        .reaction-btn:hover {
+            background: #f0f2f5;
+        }
+        .reaction-btn.active {
+            color: #1877f2;
+        }
+        .comment-input {
+            border: none;
+            background: #f0f2f5;
+            border-radius: 20px;
+            padding: 8px 15px;
+            width: 100%;
+        }
+        .story-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #d62976);
+            padding: 2px;
+            cursor: pointer;
+        }
+        .story-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+        .online-dot {
+            width: 12px;
+            height: 12px;
+            background: #31a24c;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            border: 2px solid white;
+        }
+        .modal-custom {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content-custom {
+            background: white;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .admin-badge {
+            background: #dc3545;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navegação -->
+<nav class="navbar-custom py-2">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center w-100">
+            <h3 class="text-primary mb-0" style="font-weight: bold;">RedeSocial</h3>
+            <div class="d-flex gap-3">
+                <button class="btn btn-link text-dark nav-btn" onclick="showPage('feed')">
+                    <i class="fas fa-home fa-lg"></i>
+                </button>
+                <button class="btn btn-link text-dark nav-btn" onclick="showPage('profile')">
+                    <i class="fas fa-user fa-lg"></i>
+                </button>
+                <button class="btn btn-link text-dark nav-btn" id="adminBtn" onclick="showPage('admin')" style="display: none;">
+                    <i class="fas fa-shield-alt fa-lg" style="color: #dc3545;"></i>
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="logout()">Sair</button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container" style="margin-top: 80px;">
+    <!-- Página de Login -->
+    <div id="loginPage" class="page active">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-5">
+                <div class="card shadow-lg border-0 rounded-4">
+                    <div class="card-body p-5">
+                        <h2 class="text-center mb-4 text-primary">RedeSocial</h2>
+                        <h5 class="text-center mb-4">Bem-vindo de volta!</h5>
+                        <div id="loginError" class="alert alert-danger d-none"></div>
+                        <input type="email" id="loginEmail" class="form-control mb-3" placeholder="Email" value="admin@redesocial.com">
+                        <input type="password" id="loginPassword" class="form-control mb-3" placeholder="Senha" value="Admin@123">
+                        <button class="btn btn-primary w-100 mb-3" onclick="login()">Entrar</button>
+                        <hr>
+                        <p class="text-center text-muted small">Demo: use admin@redesocial.com / Admin@123<br>Ou crie uma conta nova</p>
+                        <button class="btn btn-outline-success w-100" onclick="showRegister()">Criar nova conta</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Página de Registro -->
+    <div id="registerPage" class="page">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-5">
+                <div class="card shadow-lg border-0 rounded-4">
+                    <div class="card-body p-5">
+                        <h4 class="text-center mb-4">Criar conta</h4>
+                        <div id="registerError" class="alert alert-danger d-none"></div>
+                        <input type="text" id="regName" class="form-control mb-3" placeholder="Nome completo">
+                        <input type="email" id="regEmail" class="form-control mb-3" placeholder="Email">
+                        <input type="password" id="regPassword" class="form-control mb-3" placeholder="Senha">
+                        <button class="btn btn-success w-100 mb-3" onclick="register()">Cadastrar</button>
+                        <button class="btn btn-link w-100" onclick="showLogin()">Já tem conta? Faça login</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Página do Feed -->
+    <div id="feedPage" class="page">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="sidebar">
+                    <div class="card border-0 rounded-3 mb-3">
+                        <div class="card-body text-center">
+                            <img id="profileAvatar" src="https://randomuser.me/api/portraits/men/1.jpg" class="avatar-lg mb-2">
+                            <h6 id="profileName">Carregando...</h6>
+                            <p class="text-muted small" id="profileEmail"></p>
+                            <hr>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <h6 id="postCount">0</h6>
+                                    <small>Posts</small>
+                                </div>
+                                <div class="col-4">
+                                    <h6 id="followersCount">0</h6>
+                                    <small>Seguidores</small>
+                                </div>
+                                <div class="col-4">
+                                    <h6 id="followingCount">0</h6>
+                                    <small>Seguindo</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <!-- Criar post -->
+                <div class="card border-0 rounded-3 mb-3">
+                    <div class="card-body">
+                        <div class="d-flex gap-2">
+                            <img src="https://randomuser.me/api/portraits/men/1.jpg" class="avatar">
+                            <textarea id="newPostContent" class="form-control" rows="2" placeholder="O que você está pensando?"></textarea>
+                        </div>
+                        <div class="mt-2 d-flex justify-content-between">
+                            <button class="btn btn-light btn-sm" onclick="document.getElementById('postImage').click()">
+                                <i class="fas fa-image text-success"></i> Foto
+                            </button>
+                            <input type="file" id="postImage" accept="image/*" style="display: none">
+                            <button class="btn btn-primary btn-sm px-4" onclick="createPost()">Publicar</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Posts -->
+                <div id="postsContainer"></div>
+            </div>
+            <div class="col-md-3">
+                <div class="sidebar">
+                    <div class="card border-0 rounded-3">
+                        <div class="card-body">
+                            <h6>Sugestões para você</h6>
+                            <div id="suggestions"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Página do Perfil -->
+    <div id="profilePage" class="page">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card border-0 rounded-3">
+                    <div class="cover-photo"></div>
+                    <div class="card-body text-center" style="margin-top: -40px;">
+                        <img id="profileViewAvatar" src="https://randomuser.me/api/portraits/men/1.jpg" class="avatar-lg mb-2" style="border: 3px solid white;">
+                        <h4 id="profileViewName"></h4>
+                        <p class="text-muted" id="profileViewEmail"></p>
+                        <p id="profileViewBio">Desenvolvedor apaixonado por tecnologia</p>
+                        <button class="btn btn-primary" onclick="showPage('feed')">Ver feed</button>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h5>Meus posts</h5>
+                    <div id="userPostsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Página Admin -->
+    <div id="adminPage" class="page">
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 rounded-3">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="fas fa-shield-alt"></i> Painel Administrativo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body">
+                                        <h3 id="adminTotalUsers">0</h3>
+                                        <p>Usuários</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body">
+                                        <h3 id="adminTotalPosts">0</h3>
+                                        <p>Posts</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <ul class="nav nav-tabs mb-3">
+                            <li class="nav-item">
+                                <button class="nav-link active" onclick="showAdminTab('users')">Usuários</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" onclick="showAdminTab('posts')">Posts</button>
+                            </li>
+                        </ul>
+                        <div id="adminUsersList"></div>
+                        <div id="adminPostsList" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============ DADOS SIMULADOS (salvos no localStorage) ============
+    let currentUser = null;
+    let users = JSON.parse(localStorage.getItem('social_users')) || [];
+    let posts = JSON.parse(localStorage.getItem('social_posts')) || [];
+    let comments = JSON.parse(localStorage.getItem('social_comments')) || [];
+    let likes = JSON.parse(localStorage.getItem('social_likes')) || [];
+    let follows = JSON.parse(localStorage.getItem('social_follows')) || [];
+
+    // Criar admin padrão se não existir
+    if (users.length === 0) {
+        users.push({
+            id: 1,
+            name: 'Administrador',
+            email: 'admin@redesocial.com',
+            password: 'Admin@123',
+            avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
+            bio: 'Administrador do sistema',
+            role: 'admin',
+            createdAt: new Date().toISOString()
+        });
+        users.push({
+            id: 2,
+            name: 'Maria Silva',
+            email: 'maria@email.com',
+            password: '123456',
+            avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
+            bio: 'Apaixonada por tecnologia',
+            role: 'user',
+            createdAt: new Date().toISOString()
+        });
+        users.push({
+            id: 3,
+            name: 'João Santos',
+            email: 'joao@email.com',
+            password: '123456',
+            avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
+            bio: 'Fotógrafo profissional',
+            role: 'user',
+            createdAt: new Date().toISOString()
+        });
+        saveUsers();
+    }
+
+    // Criar posts iniciais
+    if (posts.length === 0) {
+        posts.push({
+            id: 1,
+            userId: 2,
+            content: 'Olá pessoal! Este é meu primeiro post na rede social 🚀',
+            image: 'https://picsum.photos/500/300?random=1',
+            createdAt: new Date().toISOString()
+        });
+        posts.push({
+            id: 2,
+            userId: 3,
+            content: 'Hoje tem sessão de fotos incrível! 📸',
+            image: 'https://picsum.photos/500/300?random=2',
+            createdAt: new Date().toISOString()
+        });
+        posts.push({
+            id: 3,
+            userId: 1,
+            content: 'Bem-vindos à RedeSocial! Qualquer dúvida estou aqui.',
+            image: '',
+            createdAt: new Date().toISOString()
+        });
+        savePosts();
+    }
+
+    function saveUsers() { localStorage.setItem('social_users', JSON.stringify(users)); }
+    function savePosts() { localStorage.setItem('social_posts', JSON.stringify(posts)); }
+    function saveComments() { localStorage.setItem('social_comments', JSON.stringify(comments)); }
+    function saveLikes() { localStorage.setItem('social_likes', JSON.stringify(likes)); }
+    function saveFollows() { localStorage.setItem('social_follows', JSON.stringify(follows)); }
+
+    function showPage(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        if (page === 'feed') document.getElementById('feedPage').classList.add('active');
+        else if (page === 'profile') {
+            document.getElementById('profilePage').classList.add('active');
+            loadProfile();
+        }
+        else if (page === 'admin') document.getElementById('adminPage').classList.add('active');
+        else if (page === 'login') document.getElementById('loginPage').classList.add('active');
+        
+        if (page === 'feed') loadFeed();
+        if (page === 'admin' && currentUser?.role === 'admin') loadAdminPanel();
+    }
+
+    function showRegister() {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('registerPage').classList.add('active');
+    }
+
+    function showLogin() {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('loginPage').classList.add('active');
+    }
+
+    function register() {
+        const name = document.getElementById('regName').value;
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        
+        if (users.find(u => u.email === email)) {
+            showError('registerError', 'Email já cadastrado');
+            return;
+        }
+        
+        const newUser = {
+            id: users.length + 1,
+            name, email, password,
+            avatar: `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 50)}.jpg`,
+            bio: 'Novo por aqui!',
+            role: 'user',
+            createdAt: new Date().toISOString()
+        };
+        users.push(newUser);
+        saveUsers();
+        showLogin();
+        alert('Conta criada com sucesso! Faça login.');
+    }
+
+    function login() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const user = users.find(u => u.email === email && u.password === password);
+        
+        if (user) {
+            currentUser = user;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            document.getElementById('profileName').innerText = currentUser.name;
+            document.getElementById('profileEmail').innerText = currentUser.email;
+            document.getElementById('profileAvatar').src = currentUser.avatar;
+            
+            if (currentUser.role === 'admin') {
+                document.getElementById('adminBtn').style.display = 'inline-block';
+            }
+            
+            showPage('feed');
+        } else {
+            showError('loginError', 'Email ou senha inválidos');
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        localStorage.removeItem('currentUser');
+        document.getElementById('adminBtn').style.display = 'none';
+        showLogin();
+    }
+
+    function showError(elementId, message) {
+        const errorDiv = document.getElementById(elementId);
+        errorDiv.innerText = message;
+        errorDiv.classList.remove('d-none');
+        setTimeout(() => errorDiv.classList.add('d-none'), 3000);
+    }
+
+    function createPost() {
+        const content = document.getElementById('newPostContent').value;
+        if (!content.trim()) return;
+        
+        const imageFile = document.getElementById('postImage').files[0];
+        let imageUrl = '';
+        
+        if (imageFile) {
+            imageUrl = URL.createObjectURL(imageFile);
+        }
+        
+        posts.unshift({
+            id: posts.length + 1,
+            userId: currentUser.id,
+            content: content,
+            image: imageUrl,
+            createdAt: new Date().toISOString()
+        });
+        savePosts();
+        document.getElementById('newPostContent').value = '';
+        document.getElementById('postImage').value = '';
+        loadFeed();
+    }
+
+    function loadFeed() {
+        const feedPosts = [...posts].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const container = document.getElementById('postsContainer');
+        
+        if (!container) return;
+        
+        container.innerHTML = feedPosts.map(post => {
+            const user = users.find(u => u.id === post.userId);
+            const postLikes = likes.filter(l => l.postId === post.id);
+            const postComments = comments.filter(c => c.postId === post.id);
+            const userLiked = likes.some(l => l.postId === post.id && l.userId === currentUser?.id);
+            
+            return `
+                <div class="card border-0 rounded-3 mb-3">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="${user?.avatar}" class="avatar me-2">
+                            <div>
+                                <strong>${user?.name}</strong> ${user?.role === 'admin' ? '<span class="admin-badge">Admin</span>' : ''}
+                                <small class="text-muted d-block">${new Date(post.createdAt).toLocaleString()}</small>
+                            </div>
+                        </div>
+                        <p>${post.content}</p>
+                        ${post.image ? `<img src="${post.image}" class="img-fluid rounded mb-2" style="max-height: 300px; width: 100%; object-fit: cover;">` : ''}
+                        <div class="d-flex gap-3 mb-2">
+                            <button class="reaction-btn ${userLiked ? 'active' : ''}" onclick="toggleLike(${post.id})">
+                                <i class="fa-${userLiked ? 'solid' : 'regular'} fa-heart"></i> ${postLikes.length}
+                            </button>
+                            <button class="reaction-btn" onclick="toggleComments(${post.id})">
+                                <i class="fa-regular fa-comment"></i> ${postComments.length}
+                            </button>
+                        </div>
+                        <div id="comments-${post.id}" style="display: none;">
+                            <div id="commentsList-${post.id}">
+                                ${postComments.map(c => {
+                                    const commentUser = users.find(u => u.id === c.userId);
+                                    return `<div class="d-flex gap-2 mb-2"><img src="${commentUser?.avatar}" class="avatar" style="width: 30px; height: 30px;"><div><small><strong>${commentUser?.name}</strong></small><p class="small mb-0">${c.content}</p></div></div>`;
+                                }).join('')}
+                            </div>
+                            <div class="d-flex gap-2 mt-2">
+                                <img src="${currentUser?.avatar}" class="avatar" style="width: 30px; height: 30px;">
+                                <input type="text" class="comment-input" id="commentInput-${post.id}" placeholder="Escreva um comentário...">
+                                <button class="btn btn-primary btn-sm" onclick="addComment(${post.id})">Enviar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function toggleLike(postId) {
+        const existing = likes.find(l => l.postId === postId && l.userId === currentUser.id);
+        if (existing) {
+            likes = likes.filter(l => !(l.postId === postId && l.userId === currentUser.id));
+        } else {
+            likes.push({ id: likes.length + 1, postId, userId: currentUser.id });
+        }
+        saveLikes();
+        loadFeed();
+    }
+
+    function toggleComments(postId) {
+        const div = document.getElementById(`comments-${postId}`);
+        div.style.display = div.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function addComment(postId) {
+        const input = document.getElementById(`commentInput-${postId}`);
+        const content = input.value.trim();
+        if (!content) return;
+        
+        comments.push({
+            id: comments.length + 1,
+            postId,
+            userId: currentUser.id,
+            content,
+            createdAt: new Date().toISOString()
+        });
+        saveComments();
+        input.value = '';
+        loadFeed();
+    }
+
+    function loadProfile() {
+        document.getElementById('profileViewName').innerText = currentUser.name;
+        document.getElementById('profileViewEmail').innerText = currentUser.email;
+        document.getElementById('profileViewAvatar').src = currentUser.avatar;
+        
+        const userPosts = posts.filter(p => p.userId === currentUser.id);
+        const container = document.getElementById('userPostsContainer');
+        container.innerHTML = userPosts.map(post => `
+            <div class="card border-0 rounded-3 mb-2">
+                <div class="card-body">
+                    <p>${post.content}</p>
+                    ${post.image ? `<img src="${post.image}" class="img-fluid rounded">` : ''}
+                    <small class="text-muted">${new Date(post.createdAt).toLocaleString()}</small>
+                </div>
+            </div>
+        `).join('');
+        
+        document.getElementById('postCount').innerText = userPosts.length;
+        document.getElementById('followersCount').innerText = follows.filter(f => f.followingId === currentUser.id).length;
+        document.getElementById('followingCount').innerText = follows.filter(f => f.followerId === currentUser.id).length;
+    }
+
+    function loadAdminPanel() {
+        if (!currentUser || currentUser.role !== 'admin') return;
+        
+        document.getElementById('adminTotalUsers').innerText = users.length;
+        document.getElementById('adminTotalPosts').innerText = posts.length;
+        showAdminTab('users');
+    }
+
+    function showAdminTab(tab) {
+        if (tab === 'users') {
+            document.getElementById('adminUsersList').style.display = 'block';
+            document.getElementById('adminPostsList').style.display = 'none';
+            const usersList = users.map(u => `
+                <tr>
+                    <td>${u.id}</td>
+                    <td><img src="${u.avatar}" class="avatar" style="width: 30px; height: 30px;"> ${u.name}</td>
+                    <td>${u.email}</td>
+                    <td>${u.role}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="adminDeleteUser(${u.id})">Excluir</button>
+                        ${u.role !== 'admin' ? `<button class="btn btn-warning btn-sm" onclick="adminMakeAdmin(${u.id})">Tornar Admin</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('adminUsersList').innerHTML = `<table class="table"><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Role</th><th>Ações</th></tr></thead><tbody>${usersList}</tbody></table>`;
+        } else {
+            document.getElementById('adminUsersList').style.display = 'none';
+            document.getElementById('adminPostsList').style.display = 'block';
+            const postsList = posts.map(p => {
+                const user = users.find(u => u.id === p.userId);
+                return `<tr><td>${p.id}</td><td>${user?.name}</td><td>${p.content.substring(0, 50)}</td><td><button class="btn btn-danger btn-sm" onclick="adminDeletePost(${p.id})">Excluir</button></td></tr>`;
+            }).join('');
+            document.getElementById('adminPostsList').innerHTML = `<table class="table"><thead><tr><th>ID</th><th>Autor</th><th>Conteúdo</th><th>Ações</th></tr></thead><tbody>${postsList}</tbody></table>`;
+        }
+    }
+
+    function adminDeleteUser(userId) {
+        if (confirm('Tem certeza?')) {
+            users = users.filter(u => u.id !== userId);
+            posts = posts.filter(p => p.userId !== userId);
+            comments = comments.filter(c => c.userId !== userId);
+            likes = likes.filter(l => l.userId !== userId);
+            saveUsers();
+            savePosts();
+            saveComments();
+            saveLikes();
+            loadAdminPanel();
+            alert('Usuário excluído!');
+        }
+    }
+
+    function adminMakeAdmin(userId) {
+        const user = users.find(u => u.id === userId);
+        if (user) {
+            user.role = 'admin';
+            saveUsers();
+            loadAdminPanel();
+            alert('Usuário agora é admin!');
+        }
+    }
+
+    function adminDeletePost(postId) {
+        if (confirm('Excluir este post?')) {
+            posts = posts.filter(p => p.id !== postId);
+            comments = comments.filter(c => c.postId !== postId);
+            likes = likes.filter(l => l.postId !== postId);
+            savePosts();
+            saveComments();
+            saveLikes();
+            loadAdminPanel();
+            alert('Post excluído!');
+        }
+    }
+
+    // Verificar se já tem usuário logado
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        if (currentUser) {
+            document.getElementById('profileName').innerText = currentUser.name;
+            if (currentUser.role === 'admin') document.getElementById('adminBtn').style.display = 'inline-block';
+            showPage('feed');
+        }
+    }
+
+    function loadSuggestions() {
+        const suggestions = users.filter(u => u.id !== currentUser?.id).slice(0, 3);
+        document.getElementById('suggestions').innerHTML = suggestions.map(u => `
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <img src="${u.avatar}" class="avatar" style="width: 30px; height: 30px;">
+                <div class="small"><strong>${u.name}</strong></div>
+            </div>
+        `).join('');
+    }
+    
+    setInterval(() => { if (currentUser) loadSuggestions(); }, 1000);
+    if (currentUser) loadSuggestions();
+</script>
+
+</body>
+</html>
